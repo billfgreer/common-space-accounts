@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useAuth } from "../context/AuthContext";
-import TaskingRequestForm from "../components/TaskingRequestForm";
+import TaskingWizard from "../components/TaskingWizard";
 import MyRequestsList from "../components/MyRequestsList";
 import AdminReviewQueue from "../components/AdminReviewQueue";
 
@@ -21,7 +21,7 @@ export default function Dashboard() {
         <button onClick={signOut}>Sign out</button>
       </header>
 
-      <TaskingRequestForm onSubmitted={() => setRefreshKey((k) => k + 1)} />
+      <TaskingWizard onSubmitted={() => setRefreshKey((k) => k + 1)} />
       <MyRequestsList refreshKey={refreshKey} />
 
       {profile?.role === "admin" && <AdminReviewQueue />}

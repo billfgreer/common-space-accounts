@@ -32,7 +32,7 @@ export default function MyRequestsList({ refreshKey }: { refreshKey: number }) {
         body: { request_id: requestId },
       });
       if (error || !data?.url) {
-        setSendError("Could not send this request to the scheduler. Please try again.");
+        setSendError("Could not place this order. Please try again.");
         return;
       }
       window.open(data.url, "_blank", "noopener,noreferrer");
@@ -72,7 +72,7 @@ export default function MyRequestsList({ refreshKey }: { refreshKey: number }) {
           {SENDABLE_STATUSES.has(r.review_status) && (
             <div className="review-actions">
               <button disabled={busyId === r.id} onClick={() => sendToScheduler(r.id)}>
-                {busyId === r.id ? "Sending..." : r.sent_to_scheduler_at ? "Resend to scheduler" : "Send to scheduler"}
+                {busyId === r.id ? "Placing order..." : r.sent_to_scheduler_at ? "Resend order" : "Place order"}
               </button>
               {r.sent_to_scheduler_at && (
                 <span className="request-meta">Sent {new Date(r.sent_to_scheduler_at).toLocaleString()}</span>

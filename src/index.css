@@ -395,3 +395,133 @@ h1 {
 .coverage-note {
   color: #8a6400;
 }
+
+.wizard {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.wizard-progress {
+  display: flex;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  gap: 8px;
+}
+
+.wizard-step {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  font-size: 13px;
+  color: var(--text);
+}
+
+.wizard-step-dot {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  min-width: 22px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  font-size: 12px;
+  background: white;
+}
+
+.wizard-step-active {
+  color: var(--text-h);
+  font-weight: 600;
+}
+
+.wizard-step-active .wizard-step-dot {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.wizard-step-done .wizard-step-dot {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: white;
+}
+
+.wizard-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 20px;
+}
+
+.wizard-panel fieldset,
+.wizard-panel label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 14px;
+  color: var(--text-h);
+  border: none;
+  padding: 0;
+  margin: 0;
+}
+
+.wizard-panel fieldset legend {
+  font-weight: 600;
+  padding: 0;
+  margin-bottom: 8px;
+}
+
+.wizard-panel textarea,
+.wizard-panel select {
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-size: 16px;
+  font-family: inherit;
+}
+
+.wizard-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.wizard-actions button {
+  padding: 10px 16px;
+  border: none;
+  border-radius: 6px;
+  background: var(--accent);
+  color: white;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.wizard-actions button:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.wizard-actions button.wizard-back {
+  background: white;
+  color: var(--text-h);
+  border: 1px solid var(--border);
+}
+
+.order-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 16px;
+  font-size: 14px;
+}
+
+.order-summary-header {
+  display: flex;
+  justify-content: space-between;
+  font-weight: 600;
+}
