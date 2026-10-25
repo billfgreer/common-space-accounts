@@ -1,0 +1,397 @@
+:root {
+  --text: #6b6375;
+  --text-h: #08060d;
+  --bg: #fff;
+  --border: #e5e4e7;
+  --accent: #aa3bff;
+  --sans: system-ui, "Segoe UI", Roboto, sans-serif;
+
+  font: 18px/145% var(--sans);
+  color: var(--text);
+  background: var(--bg);
+}
+
+body {
+  margin: 0;
+}
+
+h1 {
+  color: var(--text-h);
+  font-size: 32px;
+}
+
+.auth-page {
+  max-width: 420px;
+  margin: 64px auto;
+  padding: 0 24px;
+}
+
+.auth-page form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.auth-page label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 14px;
+  color: var(--text-h);
+}
+
+.auth-page input,
+.auth-page select {
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-size: 16px;
+}
+
+.auth-page button {
+  padding: 10px;
+  border: none;
+  border-radius: 6px;
+  background: var(--accent);
+  color: white;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.auth-page button:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.form-error {
+  color: #c0392b;
+  font-size: 14px;
+}
+
+.form-success {
+  color: #1e7e34;
+  font-size: 14px;
+}
+
+.dashboard-page {
+  max-width: 680px;
+  margin: 48px auto;
+  padding: 0 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+.dashboard-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.dashboard-header button {
+  padding: 8px 14px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: white;
+  cursor: pointer;
+}
+
+.tasking-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 20px;
+}
+
+.tasking-form label,
+.tasking-form fieldset {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 14px;
+  color: var(--text-h);
+  border: none;
+  padding: 0;
+  margin: 0;
+}
+
+.tasking-form fieldset legend {
+  font-weight: 600;
+  padding: 0;
+  margin-bottom: 8px;
+}
+
+.tasking-form input,
+.tasking-form select,
+.tasking-form textarea {
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-size: 16px;
+  font-family: inherit;
+}
+
+.form-row {
+  display: flex;
+  gap: 12px;
+}
+
+.form-row label {
+  flex: 1;
+}
+
+.radio-row {
+  flex-direction: row !important;
+  align-items: flex-start;
+  gap: 8px !important;
+  font-size: 14px;
+}
+
+.tasking-form button {
+  padding: 10px;
+  border: none;
+  border-radius: 6px;
+  background: var(--accent);
+  color: white;
+  font-size: 16px;
+  cursor: pointer;
+  align-self: flex-start;
+}
+
+.tasking-form button:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.requests-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.request-card {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 14px;
+}
+
+.request-card-header {
+  display: flex;
+  justify-content: space-between;
+  font-weight: 600;
+}
+
+.request-meta {
+  color: var(--text);
+  font-size: 13px;
+}
+
+.status-badge {
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 12px;
+  background: #eee;
+}
+
+.status-auto_approved,
+.status-approved {
+  background: #d4f7dc;
+  color: #1e7e34;
+}
+
+.status-pending_review {
+  background: #fff3cd;
+  color: #8a6400;
+}
+
+.status-objected,
+.status-denied {
+  background: #fde2e1;
+  color: #c0392b;
+}
+
+.review-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.review-actions button {
+  padding: 6px 12px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: white;
+  cursor: pointer;
+}
+
+.review-actions button:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.aoi-map-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.aoi-map-instructions {
+  font-size: 13px;
+  color: var(--text);
+  margin: 0;
+}
+
+.aoi-map {
+  height: 320px;
+  width: 100%;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.aoi-map-clear {
+  align-self: flex-start;
+  padding: 6px 12px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: white;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.feasibility-status {
+  font-size: 14px;
+  color: var(--text);
+}
+
+.feasibility-picker {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 16px;
+}
+
+.feasibility-note {
+  font-size: 13px;
+  color: var(--text);
+  margin: 0;
+}
+
+.conflict-banner {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  background: #fff3cd;
+  color: #8a6400;
+  border-radius: 6px;
+  padding: 12px;
+  font-size: 14px;
+}
+
+.conflict-banner p {
+  margin: 0;
+}
+
+.conflict-ack {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 13px;
+}
+
+.opportunity-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 320px;
+  overflow-y: auto;
+}
+
+.opportunity-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 10px 12px;
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.opportunity-card.selected {
+  border-color: var(--accent);
+  background: #f8f0ff;
+}
+
+.opportunity-card input[type="radio"] {
+  margin-top: 4px;
+}
+
+.opportunity-body {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+}
+
+.opportunity-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+  color: var(--text-h);
+}
+
+.opportunity-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  color: var(--text);
+}
+
+.satellite-chip {
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--accent);
+  color: white;
+  font-size: 12px;
+}
+
+.confidence-badge,
+.priority-badge {
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 12px;
+}
+
+.confidence-high,
+.priority-high {
+  background: #d4f7dc;
+  color: #1e7e34;
+}
+
+.confidence-medium,
+.priority-medium {
+  background: #fff3cd;
+  color: #8a6400;
+}
+
+.confidence-low,
+.priority-low {
+  background: #fde2e1;
+  color: #c0392b;
+}
+
+.coverage-note {
+  color: #8a6400;
+}
