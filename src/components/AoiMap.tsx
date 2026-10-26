@@ -40,6 +40,9 @@ export default function AoiMap({ mode, onChange }: AoiMapProps) {
       zoom: 2,
     });
     mapRef.current = map;
+    // top-right/top-left are both covered by floating panels (see wizard-map-panel,
+    // aoi-map-hint), so the controls go bottom-left where nothing else docks.
+    map.addControl(new maplibregl.NavigationControl(), "bottom-left");
 
     map.on("load", () => {
       map.addSource(SOURCE_ID, { type: "geojson", data: { type: "FeatureCollection", features: [] } });

@@ -418,7 +418,11 @@ button:disabled::after {
   inset: 0;
 }
 
-.aoi-map-canvas {
+/* Specificity (not just source order) must win over maplibre-gl's own
+   `.maplibregl-map { position: relative }` rule (same 0,1,0 specificity,
+   no inset/height) — otherwise the canvas can collapse to 0 height
+   depending on CSS bundling order and the map silently disappears. */
+.aoi-map-canvas-wrap .aoi-map-canvas {
   position: absolute;
   inset: 0;
 }
