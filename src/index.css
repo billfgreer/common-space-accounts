@@ -412,13 +412,13 @@ button:disabled::after {
   margin-top: var(--space-2);
 }
 
-/* ---------- AOI map (full-screen step) ---------- */
+/* ---------- AOI map (in-flow step) ---------- */
 
 .wizard-map-step {
-  position: fixed;
-  inset: 0;
-  z-index: 40;
-  background: var(--cs-white);
+  position: relative;
+  height: min(60vh, 560px);
+  min-height: 380px;
+  border: var(--bw-hair) solid var(--border-default);
 }
 
 .aoi-map-canvas-wrap {
@@ -447,7 +447,7 @@ button:disabled::after {
   border: 1.5px solid var(--cs-ink);
   padding: var(--space-3) var(--space-4);
   box-shadow: var(--shadow-float);
-  max-width: calc(100vw - 440px - var(--space-8));
+  max-width: calc(100% - 420px - var(--space-6));
 }
 
 .aoi-map-instructions {
@@ -469,14 +469,10 @@ button:disabled::after {
   right: var(--space-5);
   bottom: var(--space-5);
   z-index: 10;
-  width: 400px;
-  max-width: calc(100vw - var(--space-8));
+  width: min(380px, 42%);
+  max-width: calc(100% - var(--space-8));
   overflow-y: auto;
   box-shadow: var(--shadow-float);
-}
-
-.wizard-map-panel .wizard-progress {
-  margin: 0 0 var(--space-2);
 }
 
 /* ---------- Feasibility ---------- */
@@ -717,9 +713,44 @@ button:disabled::after {
   display: flex;
   list-style: none;
   margin: 0;
-  padding: 0 0 var(--space-3);
+  padding: var(--space-2) 0 var(--space-3);
   gap: var(--space-2);
   border-bottom: var(--bw-hair) solid var(--border-default);
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  background: var(--cs-white);
+}
+
+/* Reveals the next relevant section as the workflow advances, without
+   leaving the single page — fade + rise per the motion spec, collapsing
+   height with the grid 0fr/1fr trick so no JS measurement is needed. */
+.wizard-reveal {
+  display: grid;
+  grid-template-rows: 0fr;
+  opacity: 0;
+  transform: translateY(8px);
+  transition:
+    grid-template-rows var(--dur-slow) var(--ease-out),
+    opacity var(--dur-slow) var(--ease-out),
+    transform var(--dur-slow) var(--ease-out);
+}
+
+.wizard-reveal.is-open {
+  grid-template-rows: 1fr;
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.wizard-reveal-inner {
+  overflow: hidden;
+  min-height: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .wizard-reveal {
+    transition: none;
+  }
 }
 
 .wizard-step {

@@ -22,9 +22,10 @@ type ImagingMode = "spot" | "strip";
 interface AoiMapProps {
   mode: ImagingMode;
   onChange: (footprint: AoiFootprint | null) => void;
+  locked?: boolean;
 }
 
-export default function AoiMap({ mode, onChange }: AoiMapProps) {
+export default function AoiMap({ mode, onChange, locked = false }: AoiMapProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<MaplibreMap | null>(null);
   const pendingPointRef = useRef<LngLat | null>(null);
@@ -113,6 +114,7 @@ export default function AoiMap({ mode, onChange }: AoiMapProps) {
     if (!map || !loaded) return;
 
     function handleClick(e: maplibregl.MapMouseEvent) {
+      if (locked) return;
       const clicked: LngLat = [e.lngLat.lng, e.lngLat.lat];
 
       if (mode === "spot") {
@@ -142,18 +144,20 @@ export default function AoiMap({ mode, onChange }: AoiMapProps) {
       map.off("click", handleClick);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [mode, loaded]);
+  }, [mode, loaded, locked]);
 
   return (
     <div className="aoi-map-canvas-wrap">
       <div ref={containerRef} className="aoi-map-canvas" />
       <div className="aoi-map-hint">
         <p className="aoi-map-instructions">
-          {mode === "spot"
-            ? "Click once to place a 6\u00d76km spot footprint."
-            : `Click a start point, then an end point, to draw a 6km-wide strip (max ${MAX_STRIP_LENGTH_KM}km).`}
+          {locked
+            ? "Request submitted — area is locked."
+            : mode === "spot"
+              ? "Click once to place a 6\u00d76km spot footprint."
+              : `Click a start point, then an end point, to draw a 6km-wide strip (max ${MAX_STRIP_LENGTH_KM}km).`}
         </p>
-        <button type="button" className="aoi-map-clear" onClick={reset}>
+        <button type="button" className="aoi-map-clear" onClick={reset} disabled={locked}>
           Clear
         </button>
       </div>
