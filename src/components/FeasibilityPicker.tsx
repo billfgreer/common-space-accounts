@@ -4,7 +4,7 @@ import type { AoiFootprint } from "../lib/geo";
 import type { ConflictSummary, Opportunity } from "../lib/tasking";
 
 export interface FeasibilitySelection {
-  opportunity: Opportunity;
+  opportunities: Opportunity[];
   acknowledgedConflict: boolean;
 }
 
@@ -52,14 +52,14 @@ export default function FeasibilityPicker({ footprint, onChange }: FeasibilityPi
   const [error, setError] = useState<string | null>(null);
   const [opportunities, setOpportunities] = useState<Opportunity[]>([]);
   const [conflicts, setConflicts] = useState<ConflictSummary | null>(null);
-  const [selectedKey, setSelectedKey] = useState<string | null>(null);
+  const [selectedKeys, setSelectedKeys] = useState<Set<string>>(new Set());
   const [acknowledged, setAcknowledged] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
     setOpportunities([]);
     setConflicts(null);
-    setSelectedKey(null);
+    setSelectedKeys(new Set());
     setAcknowledged(false);
     setError(null);
     onChange(null);
@@ -96,25 +96,37 @@ export default function FeasibilityPicker({ footprint, onChange }: FeasibilityPi
   }, [footprint]);
 
   const needsAcknowledgment = !!conflicts?.hasConflict && !conflicts.ownRequest;
+  const allSelected = opportunities.length > 0 && selectedKeys.size === opportunities.length;
 
-  function selectOpportunity(o: Opportunity) {
-    const key = opportunityKey(o);
-    setSelectedKey(key);
-    if (needsAcknowledgment && !acknowledged) {
+  function emit(keys: Set<string>, ack: boolean) {
+    if (keys.size === 0 || (needsAcknowledgment && !ack)) {
       onChange(null);
-    } else {
-      onChange({ opportunity: o, acknowledgedConflict: acknowledged });
+      return;
     }
+    onChange({
+      opportunities: opportunities.filter((o) => keys.has(opportunityKey(o))),
+      acknowledgedConflict: ack,
+    });
+  }
+
+  function toggleOpportunity(o: Opportunity) {
+    const key = opportunityKey(o);
+    const next = new Set(selectedKeys);
+    if (next.has(key)) next.delete(key);
+    else next.add(key);
+    setSelectedKeys(next);
+    emit(next, acknowledged);
+  }
+
+  function toggleSelectAll() {
+    const next = allSelected ? new Set<string>() : new Set(opportunities.map(opportunityKey));
+    setSelectedKeys(next);
+    emit(next, acknowledged);
   }
 
   function toggleAcknowledged(checked: boolean) {
     setAcknowledged(checked);
-    const selected = opportunities.find((o) => opportunityKey(o) === selectedKey);
-    if (selected && (checked || !needsAcknowledgment)) {
-      onChange({ opportunity: selected, acknowledgedConflict: checked });
-    } else {
-      onChange(null);
-    }
+    emit(selectedKeys, checked);
   }
 
   if (loading) return <p className="feasibility-status">Checking feasibility…</p>;
@@ -147,21 +159,25 @@ export default function FeasibilityPicker({ footprint, onChange }: FeasibilityPi
 
       <p className="feasibility-note">
         Each pass images a fixed sensor swath along the satellite's ground track — the actual
-        "impacted" footprint can be larger than your selected area.
+        "impacted" footprint can be larger than your selected area. Select every pass you'd like to request.
       </p>
+
+      <div className="opportunity-list-toolbar">
+        <span className="opportunity-list-count">
+          {selectedKeys.size} of {opportunities.length} selected
+        </span>
+        <button type="button" className="opportunity-select-all" onClick={toggleSelectAll}>
+          {allSelected ? "Clear all" : "Select all"}
+        </button>
+      </div>
 
       <div className="opportunity-list">
         {opportunities.map((o) => {
           const key = opportunityKey(o);
-          const isSelected = key === selectedKey;
+          const isSelected = selectedKeys.has(key);
           return (
             <label key={key} className={`opportunity-card${isSelected ? " selected" : ""}`}>
-              <input
-                type="radio"
-                name="opportunity"
-                checked={isSelected}
-                onChange={() => selectOpportunity(o)}
-              />
+              <input type="checkbox" checked={isSelected} onChange={() => toggleOpportunity(o)} />
               <div className="opportunity-body">
                 <div className="opportunity-header">
                   <span className="opportunity-date">{formatLocal(o.passAt)}</span>

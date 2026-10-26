@@ -11,14 +11,11 @@ export default function Dashboard() {
   return (
     <div className="dashboard-page">
       <header className="dashboard-header">
-        <div>
-          <div className="cs-eyebrow">Account</div>
-          <h1>Welcome{profile ? `, ${profile.full_name}` : ""}</h1>
-          <p className="request-meta">
-            {profile?.role} · {profile?.organization ?? "no organization"} · {profile?.country}
-            {profile?.trusted ? " · trusted" : ""}
-          </p>
-        </div>
+        <p className="dashboard-header-identity">
+          <strong>{profile?.full_name}</strong> · {profile?.role} ·{" "}
+          {profile?.organization ?? "no organization"} · {profile?.country}
+          {profile?.trusted ? " · trusted" : ""}
+        </p>
         <button onClick={signOut}>Sign out</button>
       </header>
 

@@ -297,14 +297,22 @@ button:disabled::after {
 .dashboard-header {
   display: flex;
   justify-content: space-between;
-  align-items: flex-end;
+  align-items: center;
   gap: var(--space-4);
-  border-bottom: var(--bw-rule) solid var(--cs-ink);
-  padding-bottom: var(--space-5);
+  border-bottom: var(--bw-hair) solid var(--border-default);
+  padding-bottom: var(--space-3);
 }
 
-.dashboard-header h1 {
-  margin-bottom: var(--space-2);
+.dashboard-header-identity {
+  font-family: var(--font-mono);
+  font-size: var(--fs-label);
+  letter-spacing: var(--ls-label);
+  text-transform: uppercase;
+  color: var(--cs-mute);
+}
+
+.dashboard-header-identity strong {
+  color: var(--text-strong);
 }
 
 .request-meta {
@@ -559,10 +567,47 @@ button:disabled::after {
   background: #fffde0;
 }
 
-.opportunity-card input[type="radio"] {
+.opportunity-card input[type="checkbox"] {
   margin-top: 4px;
   width: 18px;
   height: 18px;
+}
+
+.opportunity-list-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.opportunity-list-count {
+  font-family: var(--font-mono);
+  font-size: var(--fs-label);
+  letter-spacing: var(--ls-label);
+  text-transform: uppercase;
+  color: var(--cs-mute);
+}
+
+.opportunity-select-all {
+  background: transparent;
+  border: none;
+  padding: 0;
+  height: auto;
+  font-family: var(--font-mono);
+  font-size: var(--fs-label);
+  font-weight: var(--fw-bold);
+  letter-spacing: var(--ls-label);
+  text-transform: uppercase;
+  color: var(--cs-ink);
+  text-decoration: underline;
+  text-decoration-color: var(--cs-yellow);
+  text-decoration-thickness: 2px;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+.opportunity-select-all:hover {
+  text-decoration-thickness: 4px;
 }
 
 .opportunity-body {
@@ -672,9 +717,9 @@ button:disabled::after {
   display: flex;
   list-style: none;
   margin: 0;
-  padding: 0 0 var(--space-4);
+  padding: 0 0 var(--space-3);
   gap: var(--space-2);
-  border-bottom: var(--bw-rule) solid var(--cs-ink);
+  border-bottom: var(--bw-hair) solid var(--border-default);
 }
 
 .wizard-step {
@@ -692,9 +737,9 @@ button:disabled::after {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 28px;
-  height: 28px;
-  min-width: 28px;
+  width: 22px;
+  height: 22px;
+  min-width: 22px;
   border-radius: var(--radius-pill);
   border: 1.5px solid var(--cs-line);
   background: var(--cs-white);
@@ -736,6 +781,12 @@ button:disabled::after {
 .wizard-actions {
   display: flex;
   gap: var(--space-3);
+}
+
+.order-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
 }
 
 .order-summary {

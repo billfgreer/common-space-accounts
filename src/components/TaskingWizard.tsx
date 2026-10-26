@@ -13,10 +13,15 @@ import AoiMap from "./AoiMap";
 import FeasibilityPicker, { type FeasibilitySelection } from "./FeasibilityPicker";
 import type { AoiFootprint } from "../lib/geo";
 
-const STEP_LABELS = ["Register", "Request", "Feasibility", "Order"];
+const STEP_LABELS = ["Request", "Feasibility", "Order"];
 const SENDABLE_STATUSES = new Set(["approved", "auto_approved"]);
 
 type Step = 2 | 3 | 4;
+
+interface OrderState {
+  busy: boolean;
+  error: string | null;
+}
 
 function formatLocal(iso: string): string {
   return new Date(iso).toLocaleString(undefined, {
@@ -29,11 +34,12 @@ function formatLocal(iso: string): string {
 }
 
 function WizardProgress({ step }: { step: Step }) {
+  const current = step - 1;
   return (
     <ol className="wizard-progress">
       {STEP_LABELS.map((label, idx) => {
         const n = idx + 1;
-        const status = n === 1 || n < step ? "done" : n === step ? "active" : "upcoming";
+        const status = n < current ? "done" : n === current ? "active" : "upcoming";
         return (
           <li key={label} className={`wizard-step wizard-step-${status}`}>
             <span className="wizard-step-dot">
@@ -55,7 +61,7 @@ export default function TaskingWizard({ onSubmitted }: { onSubmitted: () => void
   const [footprint, setFootprint] = useState<AoiFootprint | null>(null);
   const [rationale, setRationale] = useState("");
   const [sensitivity, setSensitivity] = useState<Sensitivity>("routine");
-  const [dataLifecycle, setDataLifecycle] = useState<DataLifecycle>("standard_1yr");
+  const [dataLifecycle] = useState<DataLifecycle>("standard_1yr");
 
   // Step 3 — feasibility.
   const [feasibility, setFeasibility] = useState<FeasibilitySelection | null>(null);
@@ -63,9 +69,8 @@ export default function TaskingWizard({ onSubmitted }: { onSubmitted: () => void
   const [submitError, setSubmitError] = useState<string | null>(null);
 
   // Step 4 — order.
-  const [submittedRequest, setSubmittedRequest] = useState<TaskingRequest | null>(null);
-  const [orderBusy, setOrderBusy] = useState(false);
-  const [orderError, setOrderError] = useState<string | null>(null);
+  const [submittedRequests, setSubmittedRequests] = useState<TaskingRequest[]>([]);
+  const [orderState, setOrderState] = useState<Record<string, OrderState>>({});
 
   function handleFootprintChange(next: AoiFootprint | null) {
     setFootprint(next);
@@ -78,11 +83,10 @@ export default function TaskingWizard({ onSubmitted }: { onSubmitted: () => void
     setFootprint(null);
     setRationale("");
     setSensitivity("routine");
-    setDataLifecycle("standard_1yr");
     setFeasibility(null);
     setSubmitError(null);
-    setSubmittedRequest(null);
-    setOrderError(null);
+    setSubmittedRequests([]);
+    setOrderState({});
   }
 
   function goToFeasibility() {
@@ -91,41 +95,45 @@ export default function TaskingWizard({ onSubmitted }: { onSubmitted: () => void
   }
 
   async function submitRequest() {
-    if (!footprint || !feasibility) return;
+    if (!footprint || !feasibility || feasibility.opportunities.length === 0) return;
     setSubmitError(null);
     setSubmitting(true);
     try {
-      const { opportunity, acknowledgedConflict } = feasibility;
-      const { data, error: invokeError } = await supabase.functions.invoke("submit-tasking-request", {
-        body: {
-          imaging_mode: footprint.mode,
-          aoi_geojson: footprint.polygon,
-          centroid_lat: footprint.centroidLat,
-          centroid_lng: footprint.centroidLng,
-          bounding_radius_km: footprint.boundingRadiusKm,
-          rationale,
-          sensitivity,
-          data_lifecycle: dataLifecycle,
-          satellite_id: opportunity.satelliteId,
-          pass_at: opportunity.passAt,
-          delivery_eta_at: opportunity.deliveryEtaAt,
-          nadir_deg: opportunity.nadirDeg,
-          sun_elevation_deg: opportunity.sunElevationDeg,
-          cloud_cover_pct: opportunity.cloudCoverPct,
-          resolution_m: opportunity.resolutionM,
-          confidence: opportunity.confidence,
-          coverage_fraction: opportunity.coverageFraction,
-          priority_tier: opportunity.priorityTier,
-          acknowledged_conflict: acknowledgedConflict,
-        },
-      });
+      const { opportunities, acknowledgedConflict } = feasibility;
+      const results = await Promise.all(
+        opportunities.map((opportunity) =>
+          supabase.functions.invoke("submit-tasking-request", {
+            body: {
+              imaging_mode: footprint.mode,
+              aoi_geojson: footprint.polygon,
+              centroid_lat: footprint.centroidLat,
+              centroid_lng: footprint.centroidLng,
+              bounding_radius_km: footprint.boundingRadiusKm,
+              rationale,
+              sensitivity,
+              data_lifecycle: dataLifecycle,
+              satellite_id: opportunity.satelliteId,
+              pass_at: opportunity.passAt,
+              delivery_eta_at: opportunity.deliveryEtaAt,
+              nadir_deg: opportunity.nadirDeg,
+              sun_elevation_deg: opportunity.sunElevationDeg,
+              cloud_cover_pct: opportunity.cloudCoverPct,
+              resolution_m: opportunity.resolutionM,
+              confidence: opportunity.confidence,
+              coverage_fraction: opportunity.coverageFraction,
+              priority_tier: opportunity.priorityTier,
+              acknowledged_conflict: acknowledgedConflict,
+            },
+          })
+        )
+      );
 
-      if (invokeError || data?.error) {
-        setSubmitError("Could not submit request. Please check your inputs and try again.");
+      if (results.some((r) => r.error || r.data?.error)) {
+        setSubmitError("Could not submit one or more requests. Please check your inputs and try again.");
         return;
       }
 
-      setSubmittedRequest(data.request);
+      setSubmittedRequests(results.map((r) => r.data.request as TaskingRequest));
       setStep(4);
       onSubmitted();
     } finally {
@@ -133,23 +141,30 @@ export default function TaskingWizard({ onSubmitted }: { onSubmitted: () => void
     }
   }
 
-  async function placeOrder() {
-    if (!submittedRequest) return;
-    setOrderError(null);
-    setOrderBusy(true);
+  async function placeOrder(requestId: string) {
+    setOrderState((prev) => ({ ...prev, [requestId]: { busy: true, error: null } }));
     try {
       const { data, error } = await supabase.functions.invoke("send-to-scheduler", {
-        body: { request_id: submittedRequest.id },
+        body: { request_id: requestId },
       });
       if (error || !data?.url) {
-        setOrderError("Could not place this order. Please try again.");
+        setOrderState((prev) => ({
+          ...prev,
+          [requestId]: { busy: false, error: "Could not place this order. Please try again." },
+        }));
         return;
       }
       window.open(data.url, "_blank", "noopener,noreferrer");
-      setSubmittedRequest((prev) => (prev ? { ...prev, sent_to_scheduler_at: new Date().toISOString() } : prev));
+      setSubmittedRequests((prev) =>
+        prev.map((r) => (r.id === requestId ? { ...r, sent_to_scheduler_at: new Date().toISOString() } : r))
+      );
+      setOrderState((prev) => ({ ...prev, [requestId]: { busy: false, error: null } }));
       onSubmitted();
-    } finally {
-      setOrderBusy(false);
+    } catch {
+      setOrderState((prev) => ({
+        ...prev,
+        [requestId]: { busy: false, error: "Could not place this order. Please try again." },
+      }));
     }
   }
 
@@ -164,7 +179,7 @@ export default function TaskingWizard({ onSubmitted }: { onSubmitted: () => void
           <div className="wizard-panel wizard-map-panel">
             <WizardProgress step={step} />
 
-            <div className="cs-eyebrow">Step 02</div>
+            <div className="cs-eyebrow">Step 01</div>
             <h2>New tasking request</h2>
 
             <fieldset>
@@ -216,17 +231,6 @@ export default function TaskingWizard({ onSubmitted }: { onSubmitted: () => void
               ))}
             </fieldset>
 
-            <label>
-              Data lifecycle
-              <select value={dataLifecycle} onChange={(e) => setDataLifecycle(e.target.value as DataLifecycle)}>
-                {(Object.keys(DATA_LIFECYCLE_LABELS) as DataLifecycle[]).map((key) => (
-                  <option key={key} value={key}>
-                    {DATA_LIFECYCLE_LABELS[key]}
-                  </option>
-                ))}
-              </select>
-            </label>
-
             <div className="wizard-actions">
               <button type="button" disabled={!footprint || !rationale.trim()} onClick={goToFeasibility}>
                 Next: Check feasibility
@@ -238,7 +242,7 @@ export default function TaskingWizard({ onSubmitted }: { onSubmitted: () => void
 
       {step === 3 && footprint && (
         <div className="wizard-panel">
-          <div className="cs-eyebrow">Step 03</div>
+          <div className="cs-eyebrow">Step 02</div>
           <h2>Check feasibility</h2>
           <FeasibilityPicker footprint={footprint} onChange={setFeasibility} />
 
@@ -249,59 +253,76 @@ export default function TaskingWizard({ onSubmitted }: { onSubmitted: () => void
               Back
             </button>
             <button type="button" disabled={!feasibility || submitting} onClick={submitRequest}>
-              {submitting ? "Submitting..." : "Submit request"}
+              {submitting
+                ? "Submitting..."
+                : feasibility && feasibility.opportunities.length > 1
+                  ? `Submit ${feasibility.opportunities.length} requests`
+                  : "Submit request"}
             </button>
           </div>
         </div>
       )}
 
-      {step === 4 && submittedRequest && (
+      {step === 4 && submittedRequests.length > 0 && (
         <div className="wizard-panel">
-          <div className="cs-eyebrow">Step 04</div>
+          <div className="cs-eyebrow">Step 03</div>
           <h2>Order</h2>
+          <p className="request-meta">
+            {submittedRequests.length} request{submittedRequests.length === 1 ? "" : "s"} submitted
+          </p>
 
-          <div className="order-summary">
-            <div className="order-summary-header">
-              <span>
-                {submittedRequest.imaging_mode === "spot" ? "Spot" : "Strip"} ·{" "}
-                {submittedRequest.centroid_lat.toFixed(3)}, {submittedRequest.centroid_lng.toFixed(3)}
-              </span>
-              <span className={`status-badge status-${submittedRequest.review_status}`}>
-                {REVIEW_STATUS_LABELS[submittedRequest.review_status]}
-              </span>
-            </div>
-            <p className="request-meta">
-              {submittedRequest.satellite_id} pass {formatLocal(submittedRequest.pass_at)} ·{" "}
-              {submittedRequest.confidence} confidence · {Math.round(submittedRequest.cloud_cover_pct)}% cloud ·{" "}
-              {submittedRequest.nadir_deg.toFixed(1)}&deg; nadir
-            </p>
-            <p className="request-meta">
-              Sensitivity: {submittedRequest.sensitivity} · Data lifecycle:{" "}
-              {DATA_LIFECYCLE_LABELS[submittedRequest.data_lifecycle]}
-            </p>
-            <p>{submittedRequest.rationale}</p>
+          <div className="order-list">
+            {submittedRequests.map((request) => {
+              const state = orderState[request.id];
+              return (
+                <div key={request.id} className="order-summary">
+                  <div className="order-summary-header">
+                    <span>
+                      {request.imaging_mode === "spot" ? "Spot" : "Strip"} ·{" "}
+                      {request.centroid_lat.toFixed(3)}, {request.centroid_lng.toFixed(3)}
+                    </span>
+                    <span className={`status-badge status-${request.review_status}`}>
+                      {REVIEW_STATUS_LABELS[request.review_status]}
+                    </span>
+                  </div>
+                  <p className="request-meta">
+                    {request.satellite_id} pass {formatLocal(request.pass_at)} ·{" "}
+                    {request.confidence} confidence · {Math.round(request.cloud_cover_pct)}% cloud ·{" "}
+                    {request.nadir_deg.toFixed(1)}&deg; nadir
+                  </p>
+                  <p className="request-meta">
+                    Sensitivity: {request.sensitivity} · Data lifecycle:{" "}
+                    {DATA_LIFECYCLE_LABELS[request.data_lifecycle]}
+                  </p>
+                  <p>{request.rationale}</p>
+
+                  {SENDABLE_STATUSES.has(request.review_status) ? (
+                    <>
+                      {state?.error && <p className="form-error">{state.error}</p>}
+                      {request.sent_to_scheduler_at ? (
+                        <p className="form-success">
+                          Order placed {new Date(request.sent_to_scheduler_at).toLocaleString()}.
+                        </p>
+                      ) : null}
+                      <div className="wizard-actions">
+                        <button type="button" disabled={state?.busy} onClick={() => placeOrder(request.id)}>
+                          {state?.busy
+                            ? "Placing order..."
+                            : request.sent_to_scheduler_at
+                              ? "Resend order"
+                              : "Place order"}
+                        </button>
+                      </div>
+                    </>
+                  ) : (
+                    <p className="feasibility-status">
+                      Needs admin review before it can be ordered. Check "Your requests" below.
+                    </p>
+                  )}
+                </div>
+              );
+            })}
           </div>
-
-          {SENDABLE_STATUSES.has(submittedRequest.review_status) ? (
-            <>
-              {orderError && <p className="form-error">{orderError}</p>}
-              {submittedRequest.sent_to_scheduler_at ? (
-                <p className="form-success">
-                  Order placed {new Date(submittedRequest.sent_to_scheduler_at).toLocaleString()}.
-                </p>
-              ) : null}
-              <div className="wizard-actions">
-                <button type="button" disabled={orderBusy} onClick={placeOrder}>
-                  {orderBusy ? "Placing order..." : submittedRequest.sent_to_scheduler_at ? "Resend order" : "Place order"}
-                </button>
-              </div>
-            </>
-          ) : (
-            <p className="feasibility-status">
-              This request needs admin review before it can be ordered. Check its status in "Your requests" below —
-              you'll be able to place the order from there once it's approved.
-            </p>
-          )}
 
           <div className="wizard-actions">
             <button type="button" className="wizard-back" onClick={resetWizard}>
