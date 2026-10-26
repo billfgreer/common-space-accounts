@@ -27,6 +27,26 @@ function formatLocal(iso: string): string {
   });
 }
 
+function cloudLabel(pct: number): string {
+  if (pct <= 10) return "Clear skies";
+  if (pct <= 40) return "Mostly clear";
+  if (pct <= 70) return "Partly cloudy";
+  return "Cloudy";
+}
+
+function cloudTier(pct: number): "good" | "fair" | "poor" {
+  if (pct <= 20) return "good";
+  if (pct <= 50) return "fair";
+  return "poor";
+}
+
+function resolutionLabel(m: number): string {
+  if (m <= 0.5) return "Very high detail";
+  if (m <= 1) return "High detail";
+  if (m <= 2) return "Medium detail";
+  return "Standard detail";
+}
+
 export default function FeasibilityPicker({ footprint, onChange }: FeasibilityPickerProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -144,25 +164,32 @@ export default function FeasibilityPicker({ footprint, onChange }: FeasibilityPi
               />
               <div className="opportunity-body">
                 <div className="opportunity-header">
-                  <span className="satellite-chip">{o.satelliteId}</span>
-                  <span>{formatLocal(o.passAt)}</span>
-                  <span className={`priority-badge priority-${o.priorityTier}`}>{o.priorityTier} priority</span>
+                  <span className="opportunity-date">{formatLocal(o.passAt)}</span>
+                  <span className="opportunity-delivery">Delivered by {formatLocal(o.deliveryEtaAt)}</span>
                 </div>
-                <div className="opportunity-meta">
-                  <span className={`confidence-badge confidence-${o.confidence}`}>
-                    {o.confidence} confidence
-                  </span>
-                  <span>{Math.round(o.cloudCoverPct)}% cloud</span>
-                  <span>{o.nadirDeg.toFixed(1)}&deg; nadir</span>
-                  <span>
-                    sun {o.sunElevationDeg >= 0 ? "+" : ""}
-                    {o.sunElevationDeg.toFixed(0)}&deg;
-                  </span>
-                  <span>{o.resolutionM.toFixed(2)}m GSD</span>
-                  <span>delivery ~{formatLocal(o.deliveryEtaAt)}</span>
-                  {o.coverageFraction < 1 && (
-                    <span className="coverage-note">{Math.round(o.coverageFraction * 100)}% of strip covered this pass</span>
-                  )}
+
+                <div className="opportunity-stats">
+                  <div className={`opportunity-stat tier-${cloudTier(o.cloudCoverPct)}`}>
+                    <span className="opportunity-stat-value">
+                      {Math.round(o.cloudCoverPct)}<span className="opportunity-stat-unit">%</span>
+                    </span>
+                    <span className="opportunity-stat-label">{cloudLabel(o.cloudCoverPct)}</span>
+                  </div>
+                  <div className="opportunity-stat">
+                    <span className="opportunity-stat-value">
+                      {o.resolutionM.toFixed(2)}<span className="opportunity-stat-unit">m</span>
+                    </span>
+                    <span className="opportunity-stat-label">{resolutionLabel(o.resolutionM)}</span>
+                  </div>
+                </div>
+
+                {o.coverageFraction < 1 && (
+                  <span className="coverage-note">{Math.round(o.coverageFraction * 100)}% of strip covered this pass</span>
+                )}
+
+                <div className="opportunity-fineprint">
+                  {o.satelliteId} · {o.nadirDeg.toFixed(1)}&deg; nadir · sun {o.sunElevationDeg >= 0 ? "+" : ""}
+                  {o.sunElevationDeg.toFixed(0)}&deg;
                 </div>
               </div>
             </label>
