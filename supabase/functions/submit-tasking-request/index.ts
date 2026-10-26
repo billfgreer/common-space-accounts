@@ -24,6 +24,7 @@
 
 import { adminClient, haversineKm, requireCaller } from "../_shared/auth.ts";
 import { buildImpactedFootprint, findConflicts } from "../_shared/feasibility.ts";
+import { corsJson, handlePreflight } from "../_shared/cors.ts";
 
 const SENSITIVITIES = ["routine", "moderate", "sensitive"];
 const LIFECYCLES = ["standard_1yr", "extended", "delete_after_use"];
@@ -56,24 +57,27 @@ interface SubmitPayload {
 }
 
 Deno.serve(async (req) => {
+  const preflight = handlePreflight(req);
+  if (preflight) return preflight;
+
   if (req.method !== "POST") {
-    return new Response(JSON.stringify({ error: "method not allowed" }), { status: 405 });
+    return corsJson({ error: "method not allowed" }, { status: 405 });
   }
 
   const supabaseAdmin = adminClient();
   const caller = await requireCaller(req, supabaseAdmin);
   if ("error" in caller) {
-    return new Response(JSON.stringify({ error: caller.error }), { status: 401 });
+    return corsJson({ error: caller.error }, { status: 401 });
   }
   if (caller.profile.status !== "active") {
-    return new Response(JSON.stringify({ error: "account_not_active" }), { status: 403 });
+    return corsJson({ error: "account_not_active" }, { status: 403 });
   }
 
   let payload: SubmitPayload;
   try {
     payload = await req.json();
   } catch {
-    return new Response(JSON.stringify({ error: "invalid request body" }), { status: 400 });
+    return corsJson({ error: "invalid request body" }, { status: 400 });
   }
 
   const {
@@ -123,7 +127,7 @@ Deno.serve(async (req) => {
     !PRIORITY_TIERS.includes(priority_tier) ||
     typeof acknowledged_conflict !== "boolean"
   ) {
-    return new Response(JSON.stringify({ error: "invalid_fields" }), { status: 400 });
+    return corsJson({ error: "invalid_fields" }, { status: 400 });
   }
 
   // Recomputed fresh, in this invocation, from the chosen pass — not trusted
@@ -147,7 +151,7 @@ Deno.serve(async (req) => {
     .select("*");
 
   if (flaggedError) {
-    return new Response(JSON.stringify({ error: "governance_check_unavailable" }), { status: 503 });
+    return corsJson({ error: "governance_check_unavailable" }, { status: 503 });
   }
 
   let objectionFlag = false;
@@ -181,7 +185,7 @@ Deno.serve(async (req) => {
   );
   const needsAcknowledgment = conflicts.hasConflict && !conflicts.ownRequest;
   if (needsAcknowledgment && !acknowledged_conflict) {
-    return new Response(JSON.stringify({ error: "conflict_acknowledgment_required" }), { status: 409 });
+    return corsJson({ error: "conflict_acknowledgment_required" }, { status: 409 });
   }
 
   // 3. Proportionate review trigger.
@@ -230,8 +234,8 @@ Deno.serve(async (req) => {
     .single();
 
   if (insertError) {
-    return new Response(JSON.stringify({ error: "submit_failed" }), { status: 500 });
+    return corsJson({ error: "submit_failed" }, { status: 500 });
   }
 
-  return new Response(JSON.stringify({ request: inserted }), { status: 200 });
+  return corsJson({ request: inserted }, { status: 200 });
 });

@@ -9,6 +9,7 @@
 
 import { adminClient, requireCaller } from "../_shared/auth.ts";
 import { findConflicts, findOpportunities } from "../_shared/feasibility.ts";
+import { corsJson, handlePreflight } from "../_shared/cors.ts";
 
 const IMAGING_MODES = ["spot", "strip"];
 
@@ -21,24 +22,27 @@ interface FeasibilityPayload {
 }
 
 Deno.serve(async (req) => {
+  const preflight = handlePreflight(req);
+  if (preflight) return preflight;
+
   if (req.method !== "POST") {
-    return new Response(JSON.stringify({ error: "method not allowed" }), { status: 405 });
+    return corsJson({ error: "method not allowed" }, { status: 405 });
   }
 
   const supabaseAdmin = adminClient();
   const caller = await requireCaller(req, supabaseAdmin);
   if ("error" in caller) {
-    return new Response(JSON.stringify({ error: caller.error }), { status: 401 });
+    return corsJson({ error: caller.error }, { status: 401 });
   }
   if (caller.profile.status !== "active") {
-    return new Response(JSON.stringify({ error: "account_not_active" }), { status: 403 });
+    return corsJson({ error: "account_not_active" }, { status: 403 });
   }
 
   let payload: FeasibilityPayload;
   try {
     payload = await req.json();
   } catch {
-    return new Response(JSON.stringify({ error: "invalid request body" }), { status: 400 });
+    return corsJson({ error: "invalid request body" }, { status: 400 });
   }
 
   const { imaging_mode, aoi_geojson, centroid_lat, centroid_lng, bounding_radius_km } = payload;
@@ -51,7 +55,7 @@ Deno.serve(async (req) => {
     typeof bounding_radius_km !== "number" ||
     bounding_radius_km <= 0
   ) {
-    return new Response(JSON.stringify({ error: "invalid_fields" }), { status: 400 });
+    return corsJson({ error: "invalid_fields" }, { status: 400 });
   }
 
   const [opportunities, conflicts] = await Promise.all([
@@ -65,5 +69,5 @@ Deno.serve(async (req) => {
     findConflicts(supabaseAdmin, caller.userId, centroid_lat, centroid_lng, bounding_radius_km),
   ]);
 
-  return new Response(JSON.stringify({ opportunities, conflicts }), { status: 200 });
+  return corsJson({ opportunities, conflicts }, { status: 200 });
 });

@@ -3,6 +3,7 @@
 // rationale logging applies to decisions, not just requests.
 
 import { adminClient, requireCaller } from "../_shared/auth.ts";
+import { corsJson, handlePreflight } from "../_shared/cors.ts";
 
 interface ReviewPayload {
   request_id: string;
@@ -11,29 +12,32 @@ interface ReviewPayload {
 }
 
 Deno.serve(async (req) => {
+  const preflight = handlePreflight(req);
+  if (preflight) return preflight;
+
   if (req.method !== "POST") {
-    return new Response(JSON.stringify({ error: "method not allowed" }), { status: 405 });
+    return corsJson({ error: "method not allowed" }, { status: 405 });
   }
 
   const supabaseAdmin = adminClient();
   const caller = await requireCaller(req, supabaseAdmin);
   if ("error" in caller) {
-    return new Response(JSON.stringify({ error: caller.error }), { status: 401 });
+    return corsJson({ error: caller.error }, { status: 401 });
   }
   if (caller.profile.role !== "admin") {
-    return new Response(JSON.stringify({ error: "forbidden" }), { status: 403 });
+    return corsJson({ error: "forbidden" }, { status: 403 });
   }
 
   let payload: ReviewPayload;
   try {
     payload = await req.json();
   } catch {
-    return new Response(JSON.stringify({ error: "invalid request body" }), { status: 400 });
+    return corsJson({ error: "invalid request body" }, { status: 400 });
   }
 
   const { request_id, decision, decision_reason } = payload;
   if (!request_id || !["approved", "denied"].includes(decision) || !decision_reason?.trim()) {
-    return new Response(JSON.stringify({ error: "invalid_fields" }), { status: 400 });
+    return corsJson({ error: "invalid_fields" }, { status: 400 });
   }
 
   const { data: existing, error: fetchError } = await supabaseAdmin
@@ -43,10 +47,10 @@ Deno.serve(async (req) => {
     .single();
 
   if (fetchError || !existing) {
-    return new Response(JSON.stringify({ error: "not_found" }), { status: 404 });
+    return corsJson({ error: "not_found" }, { status: 404 });
   }
   if (existing.review_status !== "pending_review") {
-    return new Response(JSON.stringify({ error: "not_pending" }), { status: 409 });
+    return corsJson({ error: "not_pending" }, { status: 409 });
   }
 
   const { data: updated, error: updateError } = await supabaseAdmin
@@ -62,8 +66,8 @@ Deno.serve(async (req) => {
     .single();
 
   if (updateError) {
-    return new Response(JSON.stringify({ error: "update_failed" }), { status: 500 });
+    return corsJson({ error: "update_failed" }, { status: 500 });
   }
 
-  return new Response(JSON.stringify({ request: updated }), { status: 200 });
+  return corsJson({ request: updated }, { status: 200 });
 });

@@ -12,6 +12,7 @@
 
 import { adminClient, requireCaller } from "../_shared/auth.ts";
 import { buildForesightTask, encodeForesightTask } from "../_shared/foresight.ts";
+import { corsJson, handlePreflight } from "../_shared/cors.ts";
 
 const FORESIGHT_BASE_URL = "https://billfgreer.github.io/satellite-foresight/";
 const SENDABLE_STATUSES = ["approved", "auto_approved"];
@@ -21,26 +22,29 @@ interface SendPayload {
 }
 
 Deno.serve(async (req) => {
+  const preflight = handlePreflight(req);
+  if (preflight) return preflight;
+
   if (req.method !== "POST") {
-    return new Response(JSON.stringify({ error: "method not allowed" }), { status: 405 });
+    return corsJson({ error: "method not allowed" }, { status: 405 });
   }
 
   const supabaseAdmin = adminClient();
   const caller = await requireCaller(req, supabaseAdmin);
   if ("error" in caller) {
-    return new Response(JSON.stringify({ error: caller.error }), { status: 401 });
+    return corsJson({ error: caller.error }, { status: 401 });
   }
 
   let payload: SendPayload;
   try {
     payload = await req.json();
   } catch {
-    return new Response(JSON.stringify({ error: "invalid request body" }), { status: 400 });
+    return corsJson({ error: "invalid request body" }, { status: 400 });
   }
 
   const { request_id } = payload;
   if (!request_id?.trim()) {
-    return new Response(JSON.stringify({ error: "invalid_fields" }), { status: 400 });
+    return corsJson({ error: "invalid_fields" }, { status: 400 });
   }
 
   const { data: row, error: fetchError } = await supabaseAdmin
@@ -50,13 +54,13 @@ Deno.serve(async (req) => {
     .single();
 
   if (fetchError || !row) {
-    return new Response(JSON.stringify({ error: "not_found" }), { status: 404 });
+    return corsJson({ error: "not_found" }, { status: 404 });
   }
   if (row.requester_id !== caller.userId && caller.profile.role !== "admin") {
-    return new Response(JSON.stringify({ error: "forbidden" }), { status: 403 });
+    return corsJson({ error: "forbidden" }, { status: 403 });
   }
   if (!SENDABLE_STATUSES.includes(row.review_status)) {
-    return new Response(JSON.stringify({ error: "not_approved" }), { status: 409 });
+    return corsJson({ error: "not_approved" }, { status: 409 });
   }
 
   const task = buildForesightTask(row);
@@ -69,8 +73,8 @@ Deno.serve(async (req) => {
     .eq("id", request_id);
 
   if (updateError) {
-    return new Response(JSON.stringify({ error: "update_failed" }), { status: 500 });
+    return corsJson({ error: "update_failed" }, { status: 500 });
   }
 
-  return new Response(JSON.stringify({ url }), { status: 200 });
+  return corsJson({ url }, { status: 200 });
 });

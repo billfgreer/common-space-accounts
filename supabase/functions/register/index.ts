@@ -18,6 +18,7 @@
 // feedback on how to evade screening.
 
 import { createClient } from "jsr:@supabase/supabase-js@2";
+import { corsJson, handlePreflight } from "../_shared/cors.ts";
 
 const CSL_API_KEY = Deno.env.get("TRADE_GOV_API_KEY") ?? "";
 const CSL_ENDPOINT = "https://data.trade.gov/consolidated_screening_list/v1/search";
@@ -103,20 +104,23 @@ function isStaffEmail(email: string): boolean {
 }
 
 Deno.serve(async (req) => {
+  const preflight = handlePreflight(req);
+  if (preflight) return preflight;
+
   if (req.method !== "POST") {
-    return new Response(JSON.stringify({ error: "method not allowed" }), { status: 405 });
+    return corsJson({ error: "method not allowed" }, { status: 405 });
   }
 
   let payload: RegisterPayload;
   try {
     payload = await req.json();
   } catch {
-    return new Response(JSON.stringify({ error: "invalid request body" }), { status: 400 });
+    return corsJson({ error: "invalid request body" }, { status: 400 });
   }
 
   const { email, password, full_name, organization, country } = payload;
   if (!email || !password || !full_name || !country) {
-    return new Response(JSON.stringify({ error: "missing required fields" }), { status: 400 });
+    return corsJson({ error: "missing required fields" }, { status: 400 });
   }
 
   const supabaseAdmin = createClient(
@@ -172,13 +176,13 @@ Deno.serve(async (req) => {
   });
 
   if (profileError) {
-    return new Response(JSON.stringify({ error: "registration_failed" }), { status: 500 });
+    return corsJson({ error: "registration_failed" }, { status: 500 });
   }
 
   if (isRejected) {
     // Generic response — no detail on which check hit.
-    return new Response(JSON.stringify({ status: "rejected" }), { status: 200 });
+    return corsJson({ status: "rejected" }, { status: 200 });
   }
 
-  return new Response(JSON.stringify({ status: "active" }), { status: 200 });
+  return corsJson({ status: "active" }, { status: 200 });
 });
