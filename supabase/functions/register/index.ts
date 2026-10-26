@@ -53,6 +53,9 @@ interface IpCheckResult {
 
 async function screenCsl(name: string): Promise<CslResult> {
   if (!name) return { checked: false, query: name, hit: false };
+  // No Trade.gov key configured yet — skip the check rather than failing
+  // closed on every registration. Re-enable by setting TRADE_GOV_API_KEY.
+  if (!CSL_API_KEY) return { checked: false, query: name, hit: false };
   try {
     const url = `${CSL_ENDPOINT}?api_key=${encodeURIComponent(CSL_API_KEY)}&q=${encodeURIComponent(name)}`;
     const res = await fetch(url);
@@ -90,6 +93,13 @@ function getClientIp(req: Request): string | null {
   const forwarded = req.headers.get("x-forwarded-for");
   if (forwarded) return forwarded.split(",")[0].trim();
   return req.headers.get("x-real-ip");
+}
+
+const STAFF_EMAIL_DOMAIN = "commonspace.world";
+
+function isStaffEmail(email: string): boolean {
+  const domain = email.split("@")[1]?.toLowerCase();
+  return domain === STAFF_EMAIL_DOMAIN;
 }
 
 Deno.serve(async (req) => {
@@ -151,7 +161,7 @@ Deno.serve(async (req) => {
     full_name,
     organization: organization || null,
     country,
-    role: "requester",
+    role: isStaffEmail(email) ? "admin" : "requester",
     status: isRejected ? "rejected" : "active",
     screening_log: {
       name_check: nameResult,
