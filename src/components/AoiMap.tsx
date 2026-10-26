@@ -133,16 +133,18 @@ export default function AoiMap({ mode, onChange }: AoiMapProps) {
   }, [mode, loaded]);
 
   return (
-    <div className="aoi-map-wrapper">
-      <p className="aoi-map-instructions">
-        {mode === "spot"
-          ? "Click once to place a 6\u00d76km spot footprint."
-          : `Click a start point, then an end point, to draw a 6km-wide strip (max ${MAX_STRIP_LENGTH_KM}km).`}
-      </p>
-      <div ref={containerRef} className="aoi-map" />
-      <button type="button" className="aoi-map-clear" onClick={reset}>
-        Clear
-      </button>
+    <div className="aoi-map-canvas-wrap">
+      <div ref={containerRef} className="aoi-map-canvas" />
+      <div className="aoi-map-hint">
+        <p className="aoi-map-instructions">
+          {mode === "spot"
+            ? "Click once to place a 6\u00d76km spot footprint."
+            : `Click a start point, then an end point, to draw a 6km-wide strip (max ${MAX_STRIP_LENGTH_KM}km).`}
+        </p>
+        <button type="button" className="aoi-map-clear" onClick={reset}>
+          Clear
+        </button>
+      </div>
     </div>
   );
 }

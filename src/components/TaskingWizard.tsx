@@ -155,79 +155,83 @@ export default function TaskingWizard({ onSubmitted }: { onSubmitted: () => void
 
   return (
     <div className="wizard">
-      <WizardProgress step={step} />
+      {step !== 2 && <WizardProgress step={step} />}
 
       {step === 2 && (
-        <div className="wizard-panel">
-          <div className="cs-eyebrow">Step 02</div>
-          <h2>New tasking request</h2>
-
-          <fieldset>
-            <legend>Imaging mode</legend>
-            <label className="radio-row">
-              <input
-                type="radio"
-                name="imaging_mode"
-                checked={imagingMode === "spot"}
-                onChange={() => setImagingMode("spot")}
-              />
-              <span>
-                <strong>Spot</strong> — single 6&times;6km footprint
-              </span>
-            </label>
-            <label className="radio-row">
-              <input
-                type="radio"
-                name="imaging_mode"
-                checked={imagingMode === "strip"}
-                onChange={() => setImagingMode("strip")}
-              />
-              <span>
-                <strong>Strip</strong> — 6km-wide swath, up to 30km long
-              </span>
-            </label>
-          </fieldset>
-
+        <div className="wizard-map-step">
           <AoiMap mode={imagingMode} onChange={handleFootprintChange} />
 
-          <label>
-            Rationale — why this area, why now
-            <textarea value={rationale} onChange={(e) => setRationale(e.target.value)} rows={3} required />
-          </label>
+          <div className="wizard-panel wizard-map-panel">
+            <WizardProgress step={step} />
 
-          <fieldset>
-            <legend>Sensitivity classification</legend>
-            {(Object.keys(SENSITIVITY_RUBRIC) as Sensitivity[]).map((level) => (
-              <label key={level} className="radio-row">
+            <div className="cs-eyebrow">Step 02</div>
+            <h2>New tasking request</h2>
+
+            <fieldset>
+              <legend>Imaging mode</legend>
+              <label className="radio-row">
                 <input
                   type="radio"
-                  name="sensitivity"
-                  value={level}
-                  checked={sensitivity === level}
-                  onChange={() => setSensitivity(level)}
+                  name="imaging_mode"
+                  checked={imagingMode === "spot"}
+                  onChange={() => setImagingMode("spot")}
                 />
                 <span>
-                  <strong>{level}</strong> — {SENSITIVITY_RUBRIC[level]}
+                  <strong>Spot</strong> — single 6&times;6km footprint
                 </span>
               </label>
-            ))}
-          </fieldset>
+              <label className="radio-row">
+                <input
+                  type="radio"
+                  name="imaging_mode"
+                  checked={imagingMode === "strip"}
+                  onChange={() => setImagingMode("strip")}
+                />
+                <span>
+                  <strong>Strip</strong> — 6km-wide swath, up to 30km long
+                </span>
+              </label>
+            </fieldset>
 
-          <label>
-            Data lifecycle
-            <select value={dataLifecycle} onChange={(e) => setDataLifecycle(e.target.value as DataLifecycle)}>
-              {(Object.keys(DATA_LIFECYCLE_LABELS) as DataLifecycle[]).map((key) => (
-                <option key={key} value={key}>
-                  {DATA_LIFECYCLE_LABELS[key]}
-                </option>
+            <label>
+              Rationale — why this area, why now
+              <textarea value={rationale} onChange={(e) => setRationale(e.target.value)} rows={3} required />
+            </label>
+
+            <fieldset>
+              <legend>Sensitivity classification</legend>
+              {(Object.keys(SENSITIVITY_RUBRIC) as Sensitivity[]).map((level) => (
+                <label key={level} className="radio-row">
+                  <input
+                    type="radio"
+                    name="sensitivity"
+                    value={level}
+                    checked={sensitivity === level}
+                    onChange={() => setSensitivity(level)}
+                  />
+                  <span>
+                    <strong>{level}</strong> — {SENSITIVITY_RUBRIC[level]}
+                  </span>
+                </label>
               ))}
-            </select>
-          </label>
+            </fieldset>
 
-          <div className="wizard-actions">
-            <button type="button" disabled={!footprint || !rationale.trim()} onClick={goToFeasibility}>
-              Next: Check feasibility
-            </button>
+            <label>
+              Data lifecycle
+              <select value={dataLifecycle} onChange={(e) => setDataLifecycle(e.target.value as DataLifecycle)}>
+                {(Object.keys(DATA_LIFECYCLE_LABELS) as DataLifecycle[]).map((key) => (
+                  <option key={key} value={key}>
+                    {DATA_LIFECYCLE_LABELS[key]}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            <div className="wizard-actions">
+              <button type="button" disabled={!footprint || !rationale.trim()} onClick={goToFeasibility}>
+                Next: Check feasibility
+              </button>
+            </div>
           </div>
         </div>
       )}
