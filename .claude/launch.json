@@ -9,6 +9,15 @@
       "env": {
         "PATH": "/usr/local/bin:/usr/bin:/bin"
       }
+    },
+    {
+      "name": "common-space-accounts-prod",
+      "runtimeExecutable": "/usr/local/bin/node",
+      "runtimeArgs": ["/usr/local/lib/node_modules/npm/bin/npm-cli.js", "exec", "vite", "preview", "--", "--port", "5178"],
+      "port": 5178,
+      "env": {
+        "PATH": "/usr/local/bin:/usr/bin:/bin"
+      }
     }
   ]
 }
