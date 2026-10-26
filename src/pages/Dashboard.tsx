@@ -12,6 +12,7 @@ export default function Dashboard() {
     <div className="dashboard-page">
       <header className="dashboard-header">
         <div>
+          <div className="cs-eyebrow">Account</div>
           <h1>Welcome{profile ? `, ${profile.full_name}` : ""}</h1>
           <p className="request-meta">
             {profile?.role} · {profile?.organization ?? "no organization"} · {profile?.country}

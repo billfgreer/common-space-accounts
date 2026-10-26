@@ -54,8 +54,9 @@ export default function Register() {
 
   return (
     <div className="auth-page">
+      <div className="cs-eyebrow">New account</div>
       <h1>Create an account</h1>
-      <form onSubmit={handleSubmit}>
+      <form onSubmit={handleSubmit} className="cs-ticks">
         <label>
           Full name
           <input value={fullName} onChange={(e) => setFullName(e.target.value)} required />

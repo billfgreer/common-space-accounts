@@ -41,6 +41,7 @@ export default function AdminReviewQueue() {
 
   return (
     <div className="requests-list">
+      <div className="cs-eyebrow">Admin</div>
       <h2>Pending review ({pending.length})</h2>
       {pending.length === 0 && <p>Nothing awaiting review.</p>}
       {pending.map((r) => (
@@ -62,7 +63,11 @@ export default function AdminReviewQueue() {
             <button disabled={busyId === r.id} onClick={() => decide(r.id, "approved")}>
               Approve
             </button>
-            <button disabled={busyId === r.id} onClick={() => decide(r.id, "denied")}>
+            <button
+              className="btn-outline-danger"
+              disabled={busyId === r.id}
+              onClick={() => decide(r.id, "denied")}
+            >
               Deny
             </button>
           </div>

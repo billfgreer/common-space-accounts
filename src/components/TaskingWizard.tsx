@@ -36,7 +36,9 @@ function WizardProgress({ step }: { step: Step }) {
         const status = n === 1 || n < step ? "done" : n === step ? "active" : "upcoming";
         return (
           <li key={label} className={`wizard-step wizard-step-${status}`}>
-            <span className="wizard-step-dot">{status === "done" ? "\u2713" : n}</span>
+            <span className="wizard-step-dot">
+              {status === "done" ? "\u2713" : String(n).padStart(2, "0")}
+            </span>
             <span>{label}</span>
           </li>
         );
@@ -157,6 +159,7 @@ export default function TaskingWizard({ onSubmitted }: { onSubmitted: () => void
 
       {step === 2 && (
         <div className="wizard-panel">
+          <div className="cs-eyebrow">Step 02</div>
           <h2>New tasking request</h2>
 
           <fieldset>
@@ -231,6 +234,7 @@ export default function TaskingWizard({ onSubmitted }: { onSubmitted: () => void
 
       {step === 3 && footprint && (
         <div className="wizard-panel">
+          <div className="cs-eyebrow">Step 03</div>
           <h2>Check feasibility</h2>
           <FeasibilityPicker footprint={footprint} onChange={setFeasibility} />
 
@@ -249,6 +253,7 @@ export default function TaskingWizard({ onSubmitted }: { onSubmitted: () => void
 
       {step === 4 && submittedRequest && (
         <div className="wizard-panel">
+          <div className="cs-eyebrow">Step 04</div>
           <h2>Order</h2>
 
           <div className="order-summary">

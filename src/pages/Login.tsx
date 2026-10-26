@@ -41,8 +41,9 @@ export default function Login() {
 
   return (
     <div className="auth-page">
+      <div className="cs-eyebrow">Account access</div>
       <h1>Log in</h1>
-      <form onSubmit={handleSubmit}>
+      <form onSubmit={handleSubmit} className="cs-ticks">
         <label>
           Email
           <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />

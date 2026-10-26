@@ -3,6 +3,7 @@
 export default function Rejected() {
   return (
     <div className="auth-page">
+      <div className="cs-eyebrow">Access denied</div>
       <h1>Account not available</h1>
       <p>This account cannot be activated. If you believe this is an error, contact your organization's administrator.</p>
     </div>

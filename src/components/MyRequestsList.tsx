@@ -47,6 +47,7 @@ export default function MyRequestsList({ refreshKey }: { refreshKey: number }) {
 
   return (
     <div className="requests-list">
+      <div className="cs-eyebrow">Activity</div>
       <h2>Your requests</h2>
       {sendError && <p className="form-error">{sendError}</p>}
       {requests.map((r) => (

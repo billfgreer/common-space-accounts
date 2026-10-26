@@ -38,13 +38,13 @@ export default function AoiMap({ mode, onChange }: AoiMapProps) {
         id: `${SOURCE_ID}-fill`,
         type: "fill",
         source: SOURCE_ID,
-        paint: { "fill-color": "#aa3bff", "fill-opacity": 0.25 },
+        paint: { "fill-color": "#FF1DFF", "fill-opacity": 0.25 },
       });
       map.addLayer({
         id: `${SOURCE_ID}-line`,
         type: "line",
         source: SOURCE_ID,
-        paint: { "line-color": "#aa3bff", "line-width": 2 },
+        paint: { "line-color": "#FF1DFF", "line-width": 2 },
       });
 
       map.addSource(PENDING_POINT_SOURCE_ID, { type: "geojson", data: { type: "FeatureCollection", features: [] } });
@@ -52,7 +52,7 @@ export default function AoiMap({ mode, onChange }: AoiMapProps) {
         id: `${PENDING_POINT_SOURCE_ID}-circle`,
         type: "circle",
         source: PENDING_POINT_SOURCE_ID,
-        paint: { "circle-color": "#aa3bff", "circle-radius": 5 },
+        paint: { "circle-color": "#FF1DFF", "circle-radius": 5 },
       });
 
       setLoaded(true);
