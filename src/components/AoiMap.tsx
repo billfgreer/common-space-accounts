@@ -2,7 +2,16 @@ import { useEffect, useRef, useState } from "react";
 import * as maplibregl from "maplibre-gl";
 import type { Map as MaplibreMap } from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
+// maplibre-gl auto-detects its worker script's URL via import.meta.url, which
+// bundlers (Vite's dev pre-bundling, and its production rollup build alike)
+// rewrite to a path the worker script doesn't actually live at — the worker
+// then fails to load and the map silently renders with no tiles or clicks.
+// Importing the worker file with `?url` gives Vite-resolved, always-correct
+// URL in both dev and prod, which we hand to maplibre-gl explicitly.
+import maplibreWorkerUrl from "maplibre-gl/dist/maplibre-gl-worker.mjs?url";
 import { buildSpotFootprint, buildStripFootprint, MAX_STRIP_LENGTH_KM, type AoiFootprint, type LngLat } from "../lib/geo";
+
+maplibregl.setWorkerUrl(maplibreWorkerUrl);
 
 const MAP_STYLE = "https://basemaps.cartocdn.com/gl/positron-gl-style/style.json";
 const SOURCE_ID = "aoi-footprint";
